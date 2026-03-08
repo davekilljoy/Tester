@@ -60,6 +60,12 @@ tr:hover{background:#334155}
 .loading::after{content:'';display:inline-block;width:18px;height:18px;border:2px solid #38bdf8;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .info{font-size:.8rem;color:#64748b;margin-top:4px}
+.autocomplete{position:relative}
+.autocomplete input{width:100%}
+.ac-list{position:absolute;top:100%;left:0;right:0;max-height:200px;overflow-y:auto;background:#1e293b;border:1px solid #334155;border-radius:0 0 8px 8px;z-index:10;display:none}
+.ac-list.open{display:block}
+.ac-item{padding:8px 10px;cursor:pointer;font-size:.9rem;color:#e2e8f0}
+.ac-item:hover,.ac-item.active{background:#334155;color:#38bdf8}
 </style>
 </head>
 <body>
@@ -78,7 +84,7 @@ tr:hover{background:#334155}
 <!-- Player -->
 <div class="panel active" id="p-player">
   <label>Player Name</label>
-  <input id="player-name" placeholder="e.g. J.Chase">
+  <div class="autocomplete"><input id="player-name" placeholder="Start typing..." autocomplete="off"><div class="ac-list" id="ac-player-name"></div></div>
   <label>Season</label>
   <input id="player-season" type="number" value="2024">
   <label>Week Start (optional)</label>
@@ -91,7 +97,7 @@ tr:hover{background:#334155}
 <!-- Game Log -->
 <div class="panel" id="p-gamelog">
   <label>Player Name</label>
-  <input id="gl-name" placeholder="e.g. A.St.Brown">
+  <div class="autocomplete"><input id="gl-name" placeholder="Start typing..." autocomplete="off"><div class="ac-list" id="ac-gl-name"></div></div>
   <label>Season</label>
   <input id="gl-season" type="number" value="2024">
   <button class="go" onclick="runQuery('gamelog')">Get Game Log</button>
@@ -109,7 +115,7 @@ tr:hover{background:#334155}
 <!-- Red Zone -->
 <div class="panel" id="p-redzone">
   <label>Player Name (optional)</label>
-  <input id="rz-name" placeholder="e.g. T.Kelce">
+  <div class="autocomplete"><input id="rz-name" placeholder="Start typing..." autocomplete="off"><div class="ac-list" id="ac-rz-name"></div></div>
   <label>Team (optional, used if no player)</label>
   <input id="rz-team" placeholder="e.g. KC">
   <label>Season</label>
@@ -120,7 +126,7 @@ tr:hover{background:#334155}
 <!-- Compare -->
 <div class="panel" id="p-compare">
   <label>Player Names (comma-separated)</label>
-  <input id="cmp-names" placeholder="e.g. J.Chase, T.Hill, A.St.Brown">
+  <div class="autocomplete"><input id="cmp-names" placeholder="Start typing..." autocomplete="off"><div class="ac-list" id="ac-cmp-names"></div></div>
   <label>Season</label>
   <input id="cmp-season" type="number" value="2024">
   <button class="go" onclick="runQuery('compare')">Compare</button>
@@ -190,6 +196,69 @@ function makeTable(cols,rows){
   rows.forEach(r=>{h+='<tr>'+r.map(v=>'<td>'+v+'</td>').join('')+'</tr>';});
   return h+'</tbody></table>';
 }
+
+let _playerCache={};
+async function getPlayers(season){
+  if(_playerCache[season]) return _playerCache[season];
+  try{
+    const r=await fetch('/api/players?season='+season);
+    const d=await r.json();
+    _playerCache[season]=d.players||[];
+  }catch(e){_playerCache[season]=[];}
+  return _playerCache[season];
+}
+
+function setupAC(inputId,listId,seasonId){
+  const inp=document.getElementById(inputId);
+  const list=document.getElementById(listId);
+  let activeIdx=-1;
+  const isMulti=inputId==='cmp-names';
+
+  function currentTerm(){
+    if(!isMulti) return inp.value.trim();
+    const parts=inp.value.split(',');
+    return parts[parts.length-1].trim();
+  }
+  function replaceCurrentTerm(val){
+    if(!isMulti){inp.value=val;return;}
+    const parts=inp.value.split(',');
+    parts[parts.length-1]=' '+val;
+    inp.value=parts.join(','). trimStart();
+  }
+
+  async function showList(){
+    const term=currentTerm().toLowerCase();
+    if(term.length<1){list.classList.remove('open');return;}
+    const season=seasonId?val(seasonId):'2024';
+    const players=await getPlayers(season);
+    const matches=players.filter(p=>p.toLowerCase().includes(term)).slice(0,15);
+    if(!matches.length){list.classList.remove('open');return;}
+    activeIdx=-1;
+    list.innerHTML=matches.map((m,i)=>'<div class="ac-item" data-i="'+i+'">'+m+'</div>').join('');
+    list.classList.add('open');
+    list.querySelectorAll('.ac-item').forEach(el=>{
+      el.addEventListener('mousedown',e=>{e.preventDefault();replaceCurrentTerm(el.textContent);list.classList.remove('open');});
+    });
+  }
+
+  inp.addEventListener('input',showList);
+  inp.addEventListener('focus',showList);
+  inp.addEventListener('blur',()=>setTimeout(()=>list.classList.remove('open'),150));
+  inp.addEventListener('keydown',e=>{
+    const items=list.querySelectorAll('.ac-item');
+    if(!items.length) return;
+    if(e.key==='ArrowDown'){e.preventDefault();activeIdx=Math.min(activeIdx+1,items.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();activeIdx=Math.max(activeIdx-1,0);}
+    else if(e.key==='Enter'&&activeIdx>=0){e.preventDefault();replaceCurrentTerm(items[activeIdx].textContent);list.classList.remove('open');return;}
+    else return;
+    items.forEach((el,i)=>el.classList.toggle('active',i===activeIdx));
+  });
+}
+
+setupAC('player-name','ac-player-name','player-season');
+setupAC('gl-name','ac-gl-name','gl-season');
+setupAC('rz-name','ac-rz-name','rz-season');
+setupAC('cmp-names','ac-cmp-names','cmp-season');
 </script>
 </body>
 </html>"""
@@ -215,6 +284,22 @@ def _df_to_response(df, title: str) -> dict:
         "columns": list(df.columns),
         "rows": [[str(v) for v in row] for _, row in df.iterrows()],
     }
+
+
+@app.get("/api/players")
+def api_player_list():
+    """Return list of player names for autocomplete."""
+    err = _check_nfl_deps()
+    if err:
+        return err
+    try:
+        from .nfl_data import load_weekly_stats
+        season = int(request.args.get("season", 2024))
+        df = load_weekly_stats([season])
+        names = sorted(df["player_display_name"].dropna().unique().tolist())
+        return jsonify(players=names)
+    except Exception as e:
+        return jsonify(error=str(e), players=[])
 
 
 @app.post("/api/player")
