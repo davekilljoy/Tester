@@ -43,6 +43,7 @@ proot-distro login ubuntu
 apt update && apt install -y python3 python3-venv git
 git clone https://github.com/davekilljoy/Tester.git && cd Tester
 python3 -m venv ~/ff && source ~/ff/bin/activate
+pip install setuptools  # needed for nfl_data_py on Python 3.13+
 pip install ".[nfl]"
 ```
 
