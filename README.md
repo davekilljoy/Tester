@@ -40,7 +40,7 @@ proot-distro install ubuntu
 proot-distro login ubuntu
 
 # Inside Ubuntu — pre-built aarch64 wheels just work
-apt install -y python3 python3-pip git
+apt update && apt install -y python3 python3-pip git
 pip install fantasy-football-stats[nfl]
 ```
 
