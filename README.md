@@ -112,6 +112,25 @@ ff-stats trending --type add --hours 24 --limit 25
 ff-stats trending --type drop
 ```
 
+### Web UI
+
+```bash
+ff-stats-web
+```
+
+Opens a tablet-friendly dark-themed web interface at `http://localhost:5050` with all features accessible via tabs.
+
+### Returning to proot-distro
+
+If you close Termux and come back later:
+
+```bash
+proot-distro login ubuntu
+source ~/ff/bin/activate
+cd ~/Tester
+ff-stats-web  # or any ff-stats command
+```
+
 ## Data Sources
 
 - **nfl_data_py** — Python interface to nflreadr's play-by-play, weekly stats, and roster data
