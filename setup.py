@@ -10,10 +10,12 @@ setup(
         "pandas>=1.5.0",
         "tabulate>=0.9.0",
         "rich>=13.0.0",
+        "flask>=3.0.0",
     ],
     entry_points={
         "console_scripts": [
             "ff-stats=fantasy_stats.cli:main",
+            "ff-stats-web=fantasy_stats.web:run_web",
         ],
     },
     python_requires=">=3.10",
