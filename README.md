@@ -41,8 +41,9 @@ proot-distro login ubuntu
 
 # Inside Ubuntu — pre-built aarch64 wheels just work
 apt update && apt install -y python3 python3-venv git
+git clone https://github.com/davekilljoy/Tester.git && cd Tester
 python3 -m venv ~/ff && source ~/ff/bin/activate
-pip install fantasy-football-stats[nfl]
+pip install ".[nfl]"
 ```
 
 **Option B — native Termux (build from source):**
