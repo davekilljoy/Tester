@@ -22,3 +22,6 @@ nfl = [
 [project.scripts]
 ff-stats = "fantasy_stats.cli:main"
 ff-stats-web = "fantasy_stats.web:run_web"
+
+[tool.setuptools.packages.find]
+include = ["fantasy_stats*"]
