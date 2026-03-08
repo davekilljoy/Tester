@@ -34,7 +34,7 @@ numpy and pandas cannot be installed from pip directly on Termux — they must b
 
 ```bash
 # 1. Install build dependencies
-pkg install python build-essential cmake ninja libopenblas libandroid-execinfo patchelf binutils-is-llvm
+pkg install python build-essential cmake ninja libopenblas libandroid-execinfo patchelf binutils
 
 # 2. Install Python build tools
 pip install setuptools wheel packaging pyproject_metadata cython meson-python versioneer
