@@ -7,12 +7,16 @@ name = "fantasy-football-stats"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "nfl_data_py>=0.3.0",
     "requests>=2.28.0",
-    "pandas>=1.5.0",
     "tabulate>=0.9.0",
     "rich>=13.0.0",
     "flask>=3.0.0",
+]
+
+[project.optional-dependencies]
+nfl = [
+    "nfl_data_py>=0.3.0",
+    "pandas>=1.5.0",
 ]
 
 [project.scripts]

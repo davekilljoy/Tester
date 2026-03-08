@@ -3,23 +3,38 @@
 import argparse
 import sys
 
-import pandas as pd
 from rich.console import Console
 from rich.table import Table
 
-from .analysis import (
-    air_yards_share,
-    compare_players,
-    per_game_quarter_breakdown,
-    per_quarter_breakdown,
-    red_zone_targets,
-)
 from .sleeper_api import SleeperClient
+
+try:
+    import pandas as pd
+    from .analysis import (
+        air_yards_share,
+        compare_players,
+        per_game_quarter_breakdown,
+        per_quarter_breakdown,
+        red_zone_targets,
+    )
+    _HAS_NFL_DEPS = True
+except ImportError:
+    _HAS_NFL_DEPS = False
 
 console = Console()
 
 
-def _rich_table(df: pd.DataFrame, title: str) -> Table:
+def _require_nfl_deps():
+    """Exit with a helpful message if pandas/nfl_data_py are not installed."""
+    if not _HAS_NFL_DEPS:
+        console.print(
+            "[bold red]Error:[/bold red] This command requires pandas and nfl_data_py.\n"
+            "Install them with: [bold]pip install fantasy-football-stats\\[nfl][/bold]"
+        )
+        sys.exit(1)
+
+
+def _rich_table(df, title: str) -> Table:
     """Convert a DataFrame to a rich Table for pretty terminal output."""
     table = Table(title=title, show_lines=True)
     for col in df.columns:
@@ -31,6 +46,7 @@ def _rich_table(df: pd.DataFrame, title: str) -> Table:
 
 def cmd_player(args):
     """Per-quarter breakdown for a single player."""
+    _require_nfl_deps()
     seasons = [args.season] if args.season else None
     weeks = list(range(args.week_start, args.week_end + 1)) if args.week_start else None
 
@@ -41,6 +57,7 @@ def cmd_player(args):
 
 def cmd_game_log(args):
     """Per-game, per-quarter breakdown."""
+    _require_nfl_deps()
     seasons = [args.season] if args.season else None
 
     console.print(f"\n[bold cyan]Loading {args.season} play-by-play data...[/bold cyan]")
@@ -50,6 +67,7 @@ def cmd_game_log(args):
 
 def cmd_air_share(args):
     """Air yards share for a team."""
+    _require_nfl_deps()
     seasons = [args.season] if args.season else None
 
     console.print(f"\n[bold cyan]Loading {args.season} play-by-play data...[/bold cyan]")
@@ -59,6 +77,7 @@ def cmd_air_share(args):
 
 def cmd_redzone(args):
     """Red zone target breakdown."""
+    _require_nfl_deps()
     seasons = [args.season] if args.season else None
 
     console.print(f"\n[bold cyan]Loading {args.season} play-by-play data...[/bold cyan]")
@@ -73,6 +92,7 @@ def cmd_redzone(args):
 
 def cmd_compare(args):
     """Compare multiple players side by side."""
+    _require_nfl_deps()
     seasons = [args.season] if args.season else None
 
     console.print(f"\n[bold cyan]Loading {args.season} play-by-play data...[/bold cyan]")

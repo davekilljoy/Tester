@@ -8,15 +8,20 @@ import json
 import traceback
 
 from flask import Flask, render_template_string, request, jsonify
-import pandas as pd
 
-from .analysis import (
-    air_yards_share,
-    compare_players,
-    per_game_quarter_breakdown,
-    per_quarter_breakdown,
-    red_zone_targets,
-)
+try:
+    import pandas as pd
+    from .analysis import (
+        air_yards_share,
+        compare_players,
+        per_game_quarter_breakdown,
+        per_quarter_breakdown,
+        red_zone_targets,
+    )
+    _HAS_NFL_DEPS = True
+except ImportError:
+    _HAS_NFL_DEPS = False
+
 from .sleeper_api import SleeperClient
 
 app = Flask(__name__)
@@ -195,7 +200,15 @@ def index():
     return render_template_string(HTML_TEMPLATE)
 
 
-def _df_to_response(df: pd.DataFrame, title: str) -> dict:
+def _check_nfl_deps():
+    """Return an error response if NFL data deps are missing, or None if OK."""
+    if not _HAS_NFL_DEPS:
+        return jsonify(error="pandas and nfl_data_py are not installed. "
+                       "Install with: pip install fantasy-football-stats[nfl]")
+    return None
+
+
+def _df_to_response(df, title: str) -> dict:
     """Convert a DataFrame to a JSON-serializable table response."""
     return {
         "title": title,
@@ -206,6 +219,9 @@ def _df_to_response(df: pd.DataFrame, title: str) -> dict:
 
 @app.post("/api/player")
 def api_player():
+    err = _check_nfl_deps()
+    if err:
+        return err
     data = request.json
     try:
         name = data.get("name", "")
@@ -226,6 +242,9 @@ def api_player():
 
 @app.post("/api/gamelog")
 def api_gamelog():
+    err = _check_nfl_deps()
+    if err:
+        return err
     data = request.json
     try:
         name = data.get("name", "")
@@ -242,6 +261,9 @@ def api_gamelog():
 
 @app.post("/api/airshare")
 def api_airshare():
+    err = _check_nfl_deps()
+    if err:
+        return err
     data = request.json
     try:
         team = data.get("team", "")
@@ -258,6 +280,9 @@ def api_airshare():
 
 @app.post("/api/redzone")
 def api_redzone():
+    err = _check_nfl_deps()
+    if err:
+        return err
     data = request.json
     try:
         name = data.get("name") or None
@@ -276,6 +301,9 @@ def api_redzone():
 
 @app.post("/api/compare")
 def api_compare():
+    err = _check_nfl_deps()
+    if err:
+        return err
     data = request.json
     try:
         raw = data.get("names", "")
