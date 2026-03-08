@@ -30,11 +30,25 @@ pip install -e ".[nfl]"
 
 ### Termux / Android
 
-numpy and pandas cannot be installed from pip directly on Termux — they must be built with special flags:
+numpy/pandas don't have pre-built Termux wheels, so extra steps are needed.
+
+**Option A — proot-distro (recommended, easiest):**
+
+```bash
+pkg install proot-distro
+proot-distro install ubuntu
+proot-distro login ubuntu
+
+# Inside Ubuntu — pre-built aarch64 wheels just work
+apt install -y python3 python3-pip git
+pip install fantasy-football-stats[nfl]
+```
+
+**Option B — native Termux (build from source):**
 
 ```bash
 # 1. Install build dependencies
-pkg install python build-essential cmake ninja libopenblas libandroid-execinfo patchelf binutils
+pkg install python build-essential cmake ninja libopenblas libandroid-execinfo patchelf
 
 # 2. Install Python build tools
 pip install setuptools wheel packaging pyproject_metadata cython meson-python versioneer
@@ -45,7 +59,7 @@ MATHLIB=m LDFLAGS="-lpython3.12" pip install --no-build-isolation --no-cache-dir
 # 4. Build pandas
 LDFLAGS="-lpython3.12" pip install --no-build-isolation --no-cache-dir pandas
 
-# 5. Install this tool with NFL data support
+# 5. Install this tool
 pip install nfl_data_py
 pip install -e .
 ```
