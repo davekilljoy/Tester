@@ -21,6 +21,32 @@ All stats broken down **per quarter** (Q1-Q4 + OT).
 ## Install
 
 ```bash
+# Core install (Sleeper features only)
+pip install -e .
+
+# Full install with NFL stats (desktop/server)
+pip install -e ".[nfl]"
+```
+
+### Termux / Android
+
+numpy and pandas cannot be installed from pip directly on Termux — they must be built with special flags:
+
+```bash
+# 1. Install build dependencies
+pkg install python build-essential cmake ninja libopenblas libandroid-execinfo patchelf binutils-is-llvm
+
+# 2. Install Python build tools
+pip install setuptools wheel packaging pyproject_metadata cython meson-python versioneer
+
+# 3. Build numpy (replace 3.12 with your Python version)
+MATHLIB=m LDFLAGS="-lpython3.12" pip install --no-build-isolation --no-cache-dir numpy
+
+# 4. Build pandas
+LDFLAGS="-lpython3.12" pip install --no-build-isolation --no-cache-dir pandas
+
+# 5. Install this tool with NFL data support
+pip install nfl_data_py
 pip install -e .
 ```
 

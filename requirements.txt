@@ -5,7 +5,7 @@ rich>=13.0.0
 flask>=3.0.0
 
 # NFL data dependencies (optional — needed for player/game stats commands)
-# On Termux/Android, install these via: pkg install python-numpy python-pandas
-# Then: pip install nfl_data_py
+# Install with: pip install fantasy-football-stats[nfl]
+# On Termux/Android, see README.md for special build instructions.
 # nfl_data_py>=0.3.0
 # pandas>=1.5.0
